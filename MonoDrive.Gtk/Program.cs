@@ -10,7 +10,8 @@ namespace MonoDrive.Gtk
         [STAThread]
         static void Main(string[] args)
         {
-            global::Gtk.Application.Init();
+            global::Gtk.Module.Initialize();
+            global::GirCore.Integration.Initialize();
             
             var hostBuilder = GenericHost.GetBuilder(args);
             hostBuilder.ConfigureServices(RegisterServices);
