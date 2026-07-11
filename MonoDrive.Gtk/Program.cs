@@ -11,7 +11,7 @@ namespace MonoDrive.Gtk
         static void Main(string[] args)
         {
             global::Gtk.Module.Initialize();
-            global::GirCore.Integration.Initialize();
+            GirCore.Integration.Initialize();
             
             var hostBuilder = GenericHost.GetBuilder(args);
             hostBuilder.ConfigureServices(RegisterServices);

@@ -87,7 +87,14 @@ namespace MonoDrive.Gtk
 
         private async void LoginButton_Clicked(global::Gtk.Button sender, EventArgs args)
         {
-            _userLabel.SetText(await _mainWindowPresenter.GetUserEmail());
+            try
+            {
+                _userLabel.SetText(await _mainWindowPresenter.GetUserEmail());
+            }
+            catch (Exception e)
+            {
+                throw; // TODO handle exception
+            }
         }
 
         private void FolderEntry_Changed(global::Gtk.Editable sender, EventArgs args)
@@ -99,17 +106,24 @@ namespace MonoDrive.Gtk
 
         private async void SyncButton_Clicked(global::Gtk.Button sender, EventArgs args)
         {
-            var selectedPath = _folderEntry.GetText();
-
-            if (!Directory.Exists(selectedPath))
+            try
             {
-                _progressBar.Text = "Diretório inválido.";
-                return;
-            }
+                var selectedPath = _folderEntry.GetText();
 
-            _progressBar.Text = "Sincronizando...";
-            await _mainWindowPresenter.Sync(selectedPath);
-            _progressBar.Text = "Sincronização concluída.";
+                if (!Directory.Exists(selectedPath))
+                {
+                    _progressBar.Text = "Diretório inválido.";
+                    return;
+                }
+
+                _progressBar.Text = "Sincronizando...";
+                await _mainWindowPresenter.Sync(selectedPath);
+                _progressBar.Text = "Sincronização concluída.";
+            }
+            catch (Exception e)
+            {
+                throw; // TODO handle exception
+            }
         }
     }
 }
