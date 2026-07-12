@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using Gtk;
+using Microsoft.Extensions.Logging;
 using MonoDrive.Application.Interfaces;
 using Task = System.Threading.Tasks.Task;
 
@@ -22,11 +23,13 @@ namespace MonoDrive.Gtk
         internal Button LoginButton { get; private set; }
         internal Button SyncButton { get; private set; }
         private ProgressBar ProgressBar { get; set; }
+        private readonly ILogger<MainWindow> _logger;
 
-        public MainWindow(IMainWindowPresenter mainWindowPresenter, IFolderPicker folderPicker)
+        public MainWindow(IMainWindowPresenter mainWindowPresenter, IFolderPicker folderPicker, ILogger<MainWindow> logger)
         {
             _mainWindowPresenter = mainWindowPresenter;
             _folderPicker = folderPicker;
+            _logger = logger;
         }
 
         public void EnsureInitialized(global::Gtk.Application app)
@@ -94,6 +97,7 @@ namespace MonoDrive.Gtk
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro ao selecionar pasta");
                 ProgressBar.Text = $"Erro ao selecionar pasta: {ex.Message}";
             }
         }
@@ -113,6 +117,7 @@ namespace MonoDrive.Gtk
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro ao fazer login");
                 ProgressBar.Text = $"Erro ao fazer login: {ex.Message}";
             }
         }
@@ -133,6 +138,7 @@ namespace MonoDrive.Gtk
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro na sincronização");
                 ProgressBar.Text = $"Erro na sincronização: {ex.Message}";
             }
         }

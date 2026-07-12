@@ -16,7 +16,7 @@ namespace MonoDrive.Gtk
 
         public void Run()
         {
-            var app = global::Gtk.Application.New("com.knuxbbs.monodrive", global::Gio.ApplicationFlags.FlagsNone);
+            var app = global::Gtk.Application.New("com.knuxbbs.monodrive", Gio.ApplicationFlags.FlagsNone);
             AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
 
             app.OnActivate += (_, _) =>

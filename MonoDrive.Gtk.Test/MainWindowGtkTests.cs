@@ -1,4 +1,5 @@
 using Gtk;
+using Microsoft.Extensions.Logging;
 using MonoDrive.Application.Interfaces;
 using NSubstitute;
 
@@ -7,7 +8,7 @@ namespace MonoDrive.Gtk.Test;
 [Collection("Gtk")]
 public class MainWindowGtkTests(GtkFixture fixture)
 {
-    private static (IMainWindowPresenter presenter, IFolderPicker folderPicker) CreateMocks(
+    private static (IMainWindowPresenter presenter, IFolderPicker folderPicker, ILogger<MainWindow> logger) CreateMocks(
         string email = "user@example.com",
         string localRoot = null)
     {
@@ -15,18 +16,19 @@ public class MainWindowGtkTests(GtkFixture fixture)
         presenter.GetUserEmail().Returns(email);
         presenter.GetLocalRootDirectory().Returns(Task.FromResult(localRoot));
         var folderPicker = Substitute.For<IFolderPicker>();
-        return (presenter, folderPicker);
+        var logger = Substitute.For<ILogger<MainWindow>>();
+        return (presenter, folderPicker, logger);
     }
 
     [SkippableFact]
     public async Task LoginAsync_UpdatesUserLabel()
     {
         Skip.If(!fixture.DisplayAvailable, "Requer display (execute com: xvfb-run dotnet test)");
-        var (presenter, folderPicker) = CreateMocks(email: "login@example.com");
+        var (presenter, folderPicker, logger) = CreateMocks(email: "login@example.com");
 
         var result = await fixture.RunOnGtkThread<string>((app, tcs) =>
         {
-            var window = new MainWindow(presenter, folderPicker);
+            var window = new MainWindow(presenter, folderPicker, logger);
             window.EnsureInitialized(app);
 
             window.LoginButton_Clicked(window.LoginButton, EventArgs.Empty);
@@ -43,13 +45,13 @@ public class MainWindowGtkTests(GtkFixture fixture)
     {
         Skip.If(!fixture.DisplayAvailable, "Requer display (execute com: xvfb-run dotnet test)");
         var validPath = Path.GetTempPath();
-        var (presenter, folderPicker) = CreateMocks();
+        var (presenter, folderPicker, logger) = CreateMocks();
         folderPicker.PickFolderAsync(Arg.Any<Window>(), Arg.Any<string>())
             .Returns(Task.FromResult(validPath));
 
         var result = await fixture.RunOnGtkThread<bool>((app, tcs) =>
         {
-            var window = new MainWindow(presenter, folderPicker);
+            var window = new MainWindow(presenter, folderPicker, logger);
             window.EnsureInitialized(app);
 
             window.ChooseFolderButton_Clicked(window.ChooseFolderButton, EventArgs.Empty);
@@ -66,13 +68,13 @@ public class MainWindowGtkTests(GtkFixture fixture)
     {
         Skip.If(!fixture.DisplayAvailable, "Requer display (execute com: xvfb-run dotnet test)");
         var validPath = Path.GetTempPath();
-        var (presenter, folderPicker) = CreateMocks();
+        var (presenter, folderPicker, logger) = CreateMocks();
         folderPicker.PickFolderAsync(Arg.Any<Window>(), Arg.Any<string>())
             .Returns(Task.FromResult(validPath));
 
         var result = await fixture.RunOnGtkThread<string>((app, tcs) =>
         {
-            var window = new MainWindow(presenter, folderPicker);
+            var window = new MainWindow(presenter, folderPicker, logger);
             window.EnsureInitialized(app);
 
             window.ChooseFolderButton_Clicked(window.ChooseFolderButton, EventArgs.Empty);
@@ -88,13 +90,13 @@ public class MainWindowGtkTests(GtkFixture fixture)
     public async Task ChooseFolderAsync_WhenPickerReturnsNull_KeepsSyncButtonDisabled()
     {
         Skip.If(!fixture.DisplayAvailable, "Requer display (execute com: xvfb-run dotnet test)");
-        var (presenter, folderPicker) = CreateMocks();
+        var (presenter, folderPicker, logger) = CreateMocks();
         folderPicker.PickFolderAsync(Arg.Any<Window>(), Arg.Any<string>())
             .Returns(Task.FromResult<string>(null));
 
         var result = await fixture.RunOnGtkThread<bool>((app, tcs) =>
         {
-            var window = new MainWindow(presenter, folderPicker);
+            var window = new MainWindow(presenter, folderPicker, logger);
             window.EnsureInitialized(app);
 
             window.ChooseFolderButton_Clicked(window.ChooseFolderButton, EventArgs.Empty);
@@ -111,11 +113,11 @@ public class MainWindowGtkTests(GtkFixture fixture)
     {
         Skip.If(!fixture.DisplayAvailable, "Requer display (execute com: xvfb-run dotnet test)");
         var savedPath = Path.GetTempPath();
-        var (presenter, folderPicker) = CreateMocks(localRoot: savedPath);
+        var (presenter, folderPicker, logger) = CreateMocks(localRoot: savedPath);
 
         var result = await fixture.RunOnGtkThread<bool>((app, tcs) =>
         {
-            var window = new MainWindow(presenter, folderPicker);
+            var window = new MainWindow(presenter, folderPicker, logger);
             window.EnsureInitialized(app);
 
             tcs.SetResult(window.SyncButton.Sensitive);
