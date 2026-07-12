@@ -25,6 +25,7 @@ namespace MonoDrive.Gtk
 
         private static void RegisterServices(IServiceCollection services)
         {
+            services.AddSingleton<IFolderPicker, GtkFolderPicker>();
             services.AddSingleton<MainWindow>();
             services.AddSingleton<Startup>();
         }
