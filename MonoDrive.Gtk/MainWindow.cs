@@ -14,6 +14,8 @@ namespace MonoDrive.Gtk
     {
         private readonly IMainWindowPresenter _mainWindowPresenter;
         private readonly IFolderPicker _folderPicker;
+        private readonly ILogger<MainWindow> _logger;
+
         private string _selectedFolderPath;
 
         private ApplicationWindow _window;
@@ -23,9 +25,9 @@ namespace MonoDrive.Gtk
         internal Button LoginButton { get; private set; }
         internal Button SyncButton { get; private set; }
         private ProgressBar ProgressBar { get; set; }
-        private readonly ILogger<MainWindow> _logger;
 
-        public MainWindow(IMainWindowPresenter mainWindowPresenter, IFolderPicker folderPicker, ILogger<MainWindow> logger)
+        public MainWindow(IMainWindowPresenter mainWindowPresenter, IFolderPicker folderPicker,
+            ILogger<MainWindow> logger)
         {
             _mainWindowPresenter = mainWindowPresenter;
             _folderPicker = folderPicker;
