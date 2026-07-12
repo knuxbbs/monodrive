@@ -1,94 +1,148 @@
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using Gtk;
-using MonoDrive.Application;
+using Microsoft.Extensions.Logging;
 using MonoDrive.Application.Interfaces;
 using Task = System.Threading.Tasks.Task;
-using UI = Gtk.Builder.ObjectAttribute;
+
+[assembly: InternalsVisibleTo("MonoDrive.Gtk.Test")]
 
 namespace MonoDrive.Gtk
 {
-    public class MainWindow : Window
+    public class MainWindow
     {
-        [UI] private readonly Label _userLabel = null;
-        [UI] private readonly Label _folderLabel = null;
-        [UI] private readonly Button _loginButton = null;
-        [UI] private readonly FileChooserButton _fileChooser = null;
-        [UI] private readonly Button _syncButton = null;
-        [UI] private readonly ProgressBar _progressBar = null;
-
-        private IProgress<FolderStructureDownloadProgressChangedEventArgs> _progressReporter;
-
         private readonly IMainWindowPresenter _mainWindowPresenter;
+        private readonly IFolderPicker _folderPicker;
+        private readonly ILogger<MainWindow> _logger;
 
-        public MainWindow(IMainWindowPresenter mainWindowPresenter) : this(new Builder("MainWindow.glade"))
+        private string _selectedFolderPath;
+
+        private ApplicationWindow _window;
+        internal Label UserLabel { get; private set; }
+        internal Label FolderLabel { get; private set; }
+        internal Button ChooseFolderButton { get; private set; }
+        internal Button LoginButton { get; private set; }
+        internal Button SyncButton { get; private set; }
+        private ProgressBar ProgressBar { get; set; }
+
+        public MainWindow(IMainWindowPresenter mainWindowPresenter, IFolderPicker folderPicker,
+            ILogger<MainWindow> logger)
         {
             _mainWindowPresenter = mainWindowPresenter;
+            _folderPicker = folderPicker;
+            _logger = logger;
         }
 
-        private MainWindow(Builder builder) : base(builder.GetObject("MainWindow").Handle)
+        public void EnsureInitialized(global::Gtk.Application app)
         {
-            builder.Autoconnect(this);
+            _window = ApplicationWindow.New(app);
+            _window.Title = "knuxbbs Open Drive";
+            _window.SetDefaultSize(480, 240);
 
-            _loginButton.Clicked += LoginButton_Clicked;
+            var layout = Box.New(Orientation.Vertical, 8);
+            layout.SetMarginStart(8);
+            layout.SetMarginEnd(8);
+            layout.SetMarginTop(8);
+            layout.SetMarginBottom(8);
 
-            _fileChooser.Action = FileChooserAction.SelectFolder;
-            _fileChooser.SelectionChanged += FileChooser_SelectionChanged;
+            UserLabel = Label.New("[userEmail]");
+            UserLabel.SetHalign(Align.Start);
+            layout.Append(UserLabel);
 
-            _syncButton.Sensitive = false;
-            _syncButton.Clicked += SyncButton_Clicked;
+            FolderLabel = Label.New("[syncRootFolder]");
+            FolderLabel.SetHalign(Align.Start);
+            layout.Append(FolderLabel);
 
-            _progressReporter = new Progress<FolderStructureDownloadProgressChangedEventArgs>(args =>
-            {
-                _progressBar.Text = $"{args.CompletedFolders} de {args.TotalFolders} diretórios baixados.";
-                _progressBar.Fraction = args.CompletedFolders / (double) args.TotalFolders;
-            });
+            ChooseFolderButton = Button.NewWithLabel("Escolher pasta…");
+            ChooseFolderButton.OnClicked += ChooseFolderButton_Clicked;
+            layout.Append(ChooseFolderButton);
 
-            Shown += Window_OnShown;
-            DeleteEvent += Window_DeleteEvent;
+            LoginButton = Button.NewWithLabel("Login");
+            LoginButton.OnClicked += LoginButton_Clicked;
+            layout.Append(LoginButton);
+
+            SyncButton = Button.NewWithLabel("Sync");
+            SyncButton.Sensitive = false;
+            SyncButton.OnClicked += SyncButton_Clicked;
+            layout.Append(SyncButton);
+
+            ProgressBar = ProgressBar.New();
+            ProgressBar.ShowText = true;
+            ProgressBar.Text = "Aguardando sincronização";
+            layout.Append(ProgressBar);
+
+            _window.Child = layout;
+
+            _ = LoadContentAsync();
         }
 
         private async Task LoadContentAsync()
         {
-            _userLabel.Text = await _mainWindowPresenter.GetUserEmail();
-            
+            UserLabel.SetText(await _mainWindowPresenter.GetUserEmail());
+
             var localRootDirectory = await _mainWindowPresenter.GetLocalRootDirectory();
 
             if (!string.IsNullOrEmpty(localRootDirectory))
+                SetSelectedFolder(localRootDirectory);
+        }
+
+        public void Show() => _window.Present();
+
+        public async void ChooseFolderButton_Clicked(Button sender, EventArgs args)
+        {
+            try
             {
-                _folderLabel.Text = localRootDirectory;
-                _fileChooser.SelectFilename(localRootDirectory);
+                var path = await _folderPicker.PickFolderAsync(_window, _selectedFolderPath);
+                if (!string.IsNullOrEmpty(path))
+                    SetSelectedFolder(path);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao selecionar pasta");
+                ProgressBar.Text = $"Erro ao selecionar pasta: {ex.Message}";
             }
         }
-        
-        [GLib.ConnectBefore]
-        private async void Window_OnShown(object sender, EventArgs args)
+
+        private void SetSelectedFolder(string path)
         {
-            await LoadContentAsync();
+            _selectedFolderPath = path;
+            FolderLabel.SetText(path);
+            SyncButton.Sensitive = Directory.Exists(path);
         }
 
-        private async void LoginButton_Clicked(object sender, EventArgs a)
+        public async void LoginButton_Clicked(Button sender, EventArgs args)
         {
-            _userLabel.Text = await _mainWindowPresenter.GetUserEmail();
+            try
+            {
+                UserLabel.SetText(await _mainWindowPresenter.GetUserEmail());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao fazer login");
+                ProgressBar.Text = $"Erro ao fazer login: {ex.Message}";
+            }
         }
 
-        private void FileChooser_SelectionChanged(object sender, EventArgs a)
+        private async void SyncButton_Clicked(Button sender, EventArgs args)
         {
-            var fileChooser = (FileChooserButton) sender;
+            try
+            {
+                if (!Directory.Exists(_selectedFolderPath))
+                {
+                    ProgressBar.Text = "Diretório inválido.";
+                    return;
+                }
 
-            _folderLabel.Text = fileChooser.Filename;
-            _syncButton.Sensitive = Directory.Exists(fileChooser.Filename);
-        }
-
-        private void SyncButton_Clicked(object sender, EventArgs a)
-        {
-            //TODO: Exceções lançadas dentro de eventos não estão sendo capturadas
-            _mainWindowPresenter.Sync(_fileChooser.Filename);
-        }
-
-        private void Window_DeleteEvent(object sender, DeleteEventArgs a)
-        {
-            ((GLib.Application) Application).Quit();
+                ProgressBar.Text = "Sincronizando...";
+                await _mainWindowPresenter.Sync(_selectedFolderPath);
+                ProgressBar.Text = "Sincronização concluída.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro na sincronização");
+                ProgressBar.Text = $"Erro na sincronização: {ex.Message}";
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+#
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoDrive.Application", "MonoDrive.Application\MonoDrive.Application.csproj", "{EB784A19-296C-46E1-BF63-474061714F0F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoDrive.Infra.IoC", "MonoDrive.Infra.IoC\MonoDrive.Infra.IoC.csproj", "{1407ECAB-3C6D-449D-AB1B-12F96AB418AA}"
@@ -11,6 +12,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{D994EB47-8F81-460F-93BF-02F67E9F0858}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoDrive.Application.Test", "MonoDrive.Application.Test\MonoDrive.Application.Test.csproj", "{3B3AE18E-B4B7-4518-9B26-24A94BAA3BFB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoDrive.Gtk.Test", "MonoDrive.Gtk.Test\MonoDrive.Gtk.Test.csproj", "{D59CF55D-F42F-4F13-A1A7-1BACFAA0319B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,8 +41,13 @@ Global
 		{3B3AE18E-B4B7-4518-9B26-24A94BAA3BFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3B3AE18E-B4B7-4518-9B26-24A94BAA3BFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3B3AE18E-B4B7-4518-9B26-24A94BAA3BFB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D59CF55D-F42F-4F13-A1A7-1BACFAA0319B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D59CF55D-F42F-4F13-A1A7-1BACFAA0319B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D59CF55D-F42F-4F13-A1A7-1BACFAA0319B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D59CF55D-F42F-4F13-A1A7-1BACFAA0319B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{3B3AE18E-B4B7-4518-9B26-24A94BAA3BFB} = {D994EB47-8F81-460F-93BF-02F67E9F0858}
+		{D59CF55D-F42F-4F13-A1A7-1BACFAA0319B} = {D994EB47-8F81-460F-93BF-02F67E9F0858}
 	EndGlobalSection
 EndGlobal

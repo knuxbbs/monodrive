@@ -10,7 +10,8 @@ namespace MonoDrive.Gtk
         [STAThread]
         static void Main(string[] args)
         {
-            global::Gtk.Application.Init();
+            global::Gtk.Module.Initialize();
+            GirCore.Integration.Initialize();
             
             var hostBuilder = GenericHost.GetBuilder(args);
             hostBuilder.ConfigureServices(RegisterServices);
@@ -24,6 +25,7 @@ namespace MonoDrive.Gtk
 
         private static void RegisterServices(IServiceCollection services)
         {
+            services.AddSingleton<IFolderPicker, GtkFolderPicker>();
             services.AddSingleton<MainWindow>();
             services.AddSingleton<Startup>();
         }
